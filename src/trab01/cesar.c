@@ -66,11 +66,11 @@ void calculateFrequency(char *text, char *order, int *f) {
 	do {
 		changed = 0;
 		for (i = 0; i < 26 - skip; i++) {
-			if ((f[i] < f[i + 1])
-					|| (f[i] == f[i + 1]
-							&& (find(expectedDistribution, order[i], 26)
-									> find(expectedDistribution, order[i + 1],
-											26)))) {
+			//|| (f[i] == f[i + 1]
+//			&& (find(expectedDistribution, order[i], 26)
+//					> find(expectedDistribution, order[i + 1],
+//							26)))
+			if ((f[i] < f[i + 1])) {
 				int ftemp = f[i];
 				char ctemp = order[i];
 				f[i] = f[i + 1];
