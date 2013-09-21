@@ -1,7 +1,7 @@
 /*
  * cesar.c
  *
- * 	Decifra a Cifra de César através da análise de frequência
+ * 	Decifra a Cifra de César através da análise de frequência alfabética
  *
  *      Authors: João Pedro Finoto Martins    <joao.finoto.martins@usp.br>  nº USP 8549938
  *               Marcos Túlio Campos Cândido  <marcos.tulio.candido@usp.br> nº USP 8549917
@@ -11,6 +11,9 @@
 
 #include <stdio.h>
 #include <math.h>
+#include <stdlib.h>
+#include <malloc.h>
+#include <string.h>
 
 const char expectedDistribution[] = { 'a', 'e', 'o', 's', 'r', 'i', 'n', 'd',
 		'm', 't', 'u', 'c', 'l', 'p', 'v', 'g', 'h', 'q', 'b', 'f', 'z', 'j',
@@ -18,6 +21,22 @@ const char expectedDistribution[] = { 'a', 'e', 'o', 's', 'r', 'i', 'n', 'd',
 
 char getTransform(char c, int shift) {
 	return abs((c + shift) % 26);
+}
+
+void transform(const char *input, char *output, int n) {
+	int i;
+	char c;
+
+	for (i = 0; input[i]; i++) {
+		c = input[i];
+		if (c < 'a' || c > 'z') {
+			output[i] = c;
+			continue;
+		}
+		output[i] = 'a' + getTransform(c - 'a', n);
+	}
+
+	output[i] = 0;
 }
 
 int find(const char *h, char n, int c) {
@@ -31,7 +50,7 @@ int find(const char *h, char n, int c) {
 	return -1;
 }
 
-void calculateFrequence(char *text, char *order, int *f) {
+void calculateFrequency(char *text, char *order, int *f) {
 	int i, changed = 0, skip = 1;
 	for (i = 0; i < 26; i++) {
 		f[i] = 0;
@@ -50,7 +69,8 @@ void calculateFrequence(char *text, char *order, int *f) {
 			if ((f[i] < f[i + 1])
 					|| (f[i] == f[i + 1]
 							&& (find(expectedDistribution, order[i], 26)
-									> find(expectedDistribution, order[i + 1], 26)))) {
+									> find(expectedDistribution, order[i + 1],
+											26)))) {
 				int ftemp = f[i];
 				char ctemp = order[i];
 				f[i] = f[i + 1];
@@ -62,10 +82,6 @@ void calculateFrequence(char *text, char *order, int *f) {
 		}
 		skip++;
 	} while (changed);
-}
-
-void decifrar(char * mensagem, char * resultado) {
-
 }
 
 int getDeviation(char *order, int *freq) {
@@ -80,27 +96,47 @@ int getDeviation(char *order, int *freq) {
 		sum += (i - j);
 	}
 
-	return sum / span;
+	return sum;
 }
 
-int main(int argc, char **argv) {
-	char teste[] = "a frequencia de letras em um texto tem sido frequentemente "
-			"estudada para uso em criptografia e analise de frequencia "
-			"em particular. ";
-	char teste2[] = "g lxkwaktiog jk rkzxgy ks as zkdzu zks yoju lxkwaktzksktzk kyzajgjg vgxg ayu ks ixovzumxglog k gtgroyk jk lxkwaktiog ks vgxzoiargx";
-	int i;
+void decifrar(char * mensagem, char * resultado) {
+	char *temp;
+	int length = strlen(mensagem);
+	int i, minDev, minI, dev;
 	char order[26];
 	int freq[26];
 
-	calculateFrequence(teste2, order, freq);
-
-	printf("Analyzing: %s\n", teste2);
+	temp = malloc(sizeof(char) * (length + 1));
 
 	for (i = 0; i < 26; i++) {
-		printf("%c (%c) - %d\n", order[i], expectedDistribution[i], freq[i]);
+		transform(mensagem, temp, i);
+		calculateFrequency(temp, order, freq);
+		dev = abs(getDeviation(order, freq));
+		if (!i || dev < minDev) {
+			minDev = dev;
+			minI = i;
+		}
+		if (!minDev) {
+			break;
+		}
 	}
 
-	printf("Median deviation: %d\n", getDeviation(order, freq));
+	transform(mensagem, resultado, minI);
+
+	printf("Probable shift: %d\nString: ", minI);
+	puts(resultado);
+
+	free(temp);
+}
+
+int main(int argc, char **argv) {
+	char teste[] = "g lxkwaktiog jk rkzxgy ks as zkdzu zks "
+			"yoju lxkwaktzksktzk kyzajgjg vgxg ayu ks "
+			"ixovzumxglog k gtgroyk jk lxkwaktiog ks "
+			"vgxzoiargx";
+	char teste2[] = "vgxzoiargx";
+
+	decifrar(teste, teste);
 
 	return 0;
 }
