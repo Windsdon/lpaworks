@@ -1,12 +1,12 @@
 /*
  * cesar.c
  *
- * 	Decifra a Cifra de César através da análise de frequência alfabética
+ * 	Decifra a Cifra de Cï¿½sar atravï¿½s da anï¿½lise de frequï¿½ncia alfabï¿½tica
  *
- *      Authors: João Pedro Finoto Martins    <joao.finoto.martins@usp.br>  nº USP 8549938
- *               Marcos Túlio Campos Cândido  <marcos.tulio.candido@usp.br> nº USP 8549917
+ *      Authors: Joï¿½o Pedro Finoto Martins    <joao.finoto.martins@usp.br>  nï¿½ USP 8549938
+ *               Marcos Tï¿½lio Campos Cï¿½ndido  <marcos.tulio.candido@usp.br> nï¿½ USP 8549917
  *
- *        Turma: Mecatrônica
+ *        Turma: Mecatrï¿½nica
  */
 
 #include <stdio.h>
@@ -39,17 +39,6 @@ void transform(const char *input, char *output, int n) {
 	output[i] = 0;
 }
 
-int find(const char *h, char n, int c) {
-	int i;
-
-	for (i = 0; i < c; i++) {
-		if (h[i] == n) {
-			return i;
-		}
-	}
-	return -1;
-}
-
 void calculateFrequency(char *text, char *order, int *f) {
 	int i, changed = 0, skip = 1;
 	for (i = 0; i < 26; i++) {
@@ -66,10 +55,6 @@ void calculateFrequency(char *text, char *order, int *f) {
 	do {
 		changed = 0;
 		for (i = 0; i < 26 - skip; i++) {
-			//|| (f[i] == f[i + 1]
-//			&& (find(expectedDistribution, order[i], 26)
-//					> find(expectedDistribution, order[i + 1],
-//							26)))
 			if ((f[i] < f[i + 1])) {
 				int ftemp = f[i];
 				char ctemp = order[i];
@@ -99,20 +84,64 @@ int getDeviation(char *order, int *freq) {
 	return sum;
 }
 
+int isValid(char *m) {
+	int countConsonant = 0, countVowels = 0, currentCount = 0;
+	int i;
+	for(i = 0; m[i]; i++){
+		char c = m[i];
+		if(c == ' '){
+			if(currentCount == 1){
+				//stand alone letters must be a, e or o
+				switch(m[i - 1]){
+				case 'a':
+				case 'o':
+				case 'e':
+					break;
+				default:
+					return 0;
+				}
+			}
+			currentCount = 0;
+			countConsonant = 0;
+			countVowels = 0;
+		}else{
+			currentCount++;
+			switch(c){
+			case 'a':
+			case 'e':
+			case 'i':
+			case 'o':
+			case 'u':
+				countVowels++;
+				countConsonant = 0;
+				break;
+			default:
+				countConsonant++;
+				countVowels = 0;
+			}
+
+			//maximum number of vowels and consonants
+			if(countVowels > 3 || countConsonant > 4){
+				return 0;
+			}
+
+		}
+	}
+
+	return 1;
+}
+
 void decifrar(char * mensagem, char * resultado) {
-	char *temp;
 	int length = strlen(mensagem);
 	int i, minDev, minI, dev;
 	char order[26];
 	int freq[26];
 
-	temp = malloc(sizeof(char) * (length + 1));
-
 	for (i = 0; i < 26; i++) {
-		transform(mensagem, temp, i);
-		calculateFrequency(temp, order, freq);
+		transform(mensagem, resultado, i);
+		calculateFrequency(resultado, order, freq);
 		dev = abs(getDeviation(order, freq));
-		if (!i || dev < minDev) {
+		if (!i  || (dev < minDev && isValid(resultado))) {
 			minDev = dev;
 			minI = i;
 		}
@@ -123,10 +152,8 @@ void decifrar(char * mensagem, char * resultado) {
 
 	transform(mensagem, resultado, minI);
 
-	printf("Probable shift: %d\nString: ", minI);
+	printf("Probable shift: %d, dev: %d\nString: ", minI, minDev);
 	puts(resultado);
-
-	free(temp);
 }
 
 int main(int argc, char **argv) {
@@ -134,9 +161,16 @@ int main(int argc, char **argv) {
 			"yoju lxkwaktzksktzk kyzajgjg vgxg ayu ks "
 			"ixovzumxglog k gtgroyk jk lxkwaktiog ks "
 			"vgxzoiargx";
-	char teste2[] = "vgxzoiargx";
+	char teste2[] = "i am immune to your stratagems";
 
-	decifrar(teste, teste);
+	char *testef = malloc(100 * (sizeof(char)));
+
+
+	transform(teste2, teste2, 5);
+
+	puts(teste2);
+
+	decifrar(teste, testef);
 
 	return 0;
 }
