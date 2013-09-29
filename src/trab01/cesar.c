@@ -1,12 +1,12 @@
 /*
  * cesar.c
  *
- * 	Decifra a Cifra de C�sar atrav�s da an�lise de frequ�ncia alfab�tica
+ * 	Decifra a Cifra de César através da análise de frequência alfabética
  *
- *      Authors: Jo�o Pedro Finoto Martins    <joao.finoto.martins@usp.br>  n� USP 8549938
- *               Marcos T�lio Campos C�ndido  <marcos.tulio.candido@usp.br> n� USP 8549917
+ *      Authors: João Pedro Finoto Martins    <joao.finoto.martins@usp.br>  n� USP 8549938
+ *               Marcos Túlio Campos Cândido  <marcos.tulio.candido@usp.br> n� USP 8549917
  *
- *        Turma: Mecatr�nica
+ *        Turma: Mecatrônica
  */
 
 #include <stdio.h>
@@ -15,14 +15,28 @@
 #include <malloc.h>
 #include <string.h>
 
+/**
+ * A sequencia de letras esperadas de um texto em portugues
+ */
 const char expectedDistribution[] = { 'a', 'e', 'o', 's', 'r', 'i', 'n', 'd',
 		'm', 't', 'u', 'c', 'l', 'p', 'v', 'g', 'h', 'q', 'b', 'f', 'z', 'j',
 		'x', 'k', 'w', 'y' };
 
+/**
+ * Transforma uma única letra. C deve ser um número entre 0 e 25.
+ * Isso pode ser feito fazendo (c - 'a').
+ */
 char getTransform(char c, int shift) {
+	if (shift < 0) {
+		shift = 26 - shift;
+	}
 	return abs((c + shift) % 26);
 }
 
+/**
+ * Realiza o deslocamento de n em todas as letras de input
+ * e armazena o resultado em output.
+ */
 void transform(const char *input, char *output, int n) {
 	int i;
 	char c;
@@ -39,6 +53,11 @@ void transform(const char *input, char *output, int n) {
 	output[i] = 0;
 }
 
+/**
+ * Calcula a frequencia de cada letra e armazena em order e f,
+ * da maior para a menor frequencia.
+ * Order contém as letras, e f a frequencia.
+ */
 void calculateFrequency(char *text, char *order, int *f) {
 	int i, changed = 0, skip = 1;
 	for (i = 0; i < 26; i++) {
@@ -69,12 +88,19 @@ void calculateFrequency(char *text, char *order, int *f) {
 	} while (changed);
 }
 
+
+/**
+ * Calcula a distância entre a distribuição dada
+ * e a distribuição esperada para um texto em
+ * português
+ */
 int getDeviation(char *order, int *freq) {
 	int i, j, sum = 0, span = 26;
 
 	for (i = 0; i < span && freq[i]; i++) {
 		for (j = i; expectedDistribution[j] != order[i]; j++) {
 			if (j >= 26) {
+				//retornar para a primeira letra
 				j = -1;
 			}
 		}
@@ -84,15 +110,19 @@ int getDeviation(char *order, int *freq) {
 	return sum;
 }
 
+/**
+ * Verifica alguns traços linguísticos para saber
+ * se o texto tem chance de ser válido
+ */
 int isValid(char *m) {
 	int countConsonant = 0, countVowels = 0, currentCount = 0;
 	int i;
-	for(i = 0; m[i]; i++){
+	for (i = 0; m[i]; i++) {
 		char c = m[i];
-		if(c == ' '){
-			if(currentCount == 1){
-				//stand alone letters must be a, e or o
-				switch(m[i - 1]){
+		if (c == ' ') {
+			if (currentCount == 1) {
+				//letras sozinhas devem ser 'a', 'e' ou 'o'
+				switch (m[i - 1]) {
 				case 'a':
 				case 'o':
 				case 'e':
@@ -104,9 +134,9 @@ int isValid(char *m) {
 			currentCount = 0;
 			countConsonant = 0;
 			countVowels = 0;
-		}else{
+		} else {
 			currentCount++;
-			switch(c){
+			switch (c) {
 			case 'a':
 			case 'e':
 			case 'i':
@@ -120,8 +150,8 @@ int isValid(char *m) {
 				countVowels = 0;
 			}
 
-			//maximum number of vowels and consonants
-			if(countVowels > 3 || countConsonant > 4){
+			//maximo número de consoantes e vogais
+			if (countVowels > 3 || countConsonant > 4) {
 				return 0;
 			}
 
@@ -132,24 +162,35 @@ int isValid(char *m) {
 }
 
 void decifrar(char * mensagem, char * resultado) {
-	int length = strlen(mensagem);
 	int i, minDev, minI, dev;
-	char order[26];
-	int freq[26];
+	char order[26]; //vetor para a sequencia de frequencia
+	int freq[26]; //vetor para a quantidade de cada letra
 
+	char *temp = malloc((strlen(mensagem) + 1)*sizeof(char));
+
+	//testar todas as possibilidades
 	for (i = 0; i < 26; i++) {
-		transform(mensagem, resultado, i);
-		calculateFrequency(resultado, order, freq);
+		//decifrar usando a chave atual
+		transform(mensagem, temp, i);
+		//calcular a frequencia de letras
+		calculateFrequency(temp, order, freq);
+		//calcular o desvio com relação à distribuição esperada
 		dev = abs(getDeviation(order, freq));
-		if (!i  || (dev < minDev && isValid(resultado))) {
+		if (!i || (dev < minDev && isValid(temp))) {
+			//armazenar o menor desvio
 			minDev = dev;
 			minI = i;
 		}
 		if (!minDev) {
+			//se a distancia for zero não é necessário
+			//continuar a verificação
 			break;
 		}
 	}
 
+	free(temp);
+
+	//usando o menor desvio, traduza a mensagem
 	transform(mensagem, resultado, minI);
 
 	printf("Probable shift: %d, dev: %d\nString: ", minI, minDev);
@@ -161,17 +202,17 @@ int main(int argc, char **argv) {
 			"yoju lxkwaktzksktzk kyzajgjg vgxg ayu ks "
 			"ixovzumxglog k gtgroyk jk lxkwaktiog ks "
 			"vgxzoiargx";
-	char teste2[] = "i am immune to your stratagems";
+	char teste2[] = "as batatas dos mendigos";
 
-	char *testef = malloc(100 * (sizeof(char)));
+	char *testef = malloc(500 * (sizeof(char)));
 
+	srand(time(NULL));
 
-	transform(teste2, teste2, 5);
+	transform(teste2, teste2, rand() % 26);
 
 	puts(teste2);
 
-	decifrar(teste, testef);
+	decifrar(teste2, testef);
 
 	return 0;
 }
-
