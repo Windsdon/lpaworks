@@ -196,23 +196,3 @@ void decifrar(char * mensagem, char * resultado) {
 	printf("Probable shift: %d, dev: %d\nString: ", minI, minDev);
 	puts(resultado);
 }
-
-int main(int argc, char **argv) {
-	char teste[] = "g lxkwaktiog jk rkzxgy ks as zkdzu zks "
-			"yoju lxkwaktzksktzk kyzajgjg vgxg ayu ks "
-			"ixovzumxglog k gtgroyk jk lxkwaktiog ks "
-			"vgxzoiargx";
-	char teste2[] = "as batatas dos mendigos";
-
-	char *testef = malloc(500 * (sizeof(char)));
-
-	srand(time(NULL));
-
-	transform(teste2, teste2, rand() % 26);
-
-	puts(teste2);
-
-	decifrar(teste2, testef);
-
-	return 0;
-}
