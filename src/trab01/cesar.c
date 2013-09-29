@@ -134,7 +134,9 @@ int isValid(char *m) {
 				default:
 					return 0;
 				}
-			} else {
+			}
+#ifndef ESTRANGEIRISMOS
+			else {
 				//última letra não pode ser uma dessas
 				switch (c == ' ' ? m[i - 1] : c) {
 				case 'h':
@@ -149,6 +151,7 @@ int isValid(char *m) {
 					return 0;
 				}
 			}
+#endif
 			currentCount = 0;
 			countConsonant = 0;
 			countVowels = 0;
