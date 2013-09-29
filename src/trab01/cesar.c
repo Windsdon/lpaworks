@@ -27,8 +27,8 @@ const char expectedDistribution[] = { 'a', 'e', 'o', 's', 'r', 'i', 'n', 'd',
  * Isso pode ser feito fazendo (c - 'a').
  */
 char getTransform(char c, int shift) {
-	if (shift < 0) {
-		shift = 26 - shift;
+	while (shift < 0) {
+		shift += 26;
 	}
 	return abs((c + shift) % 26);
 }
@@ -88,7 +88,6 @@ void calculateFrequency(char *text, char *order, int *f) {
 	} while (changed);
 }
 
-
 /**
  * Calcula a distância entre a distribuição dada
  * e a distribuição esperada para um texto em
@@ -117,9 +116,14 @@ int getDeviation(char *order, int *freq) {
 int isValid(char *m) {
 	int countConsonant = 0, countVowels = 0, currentCount = 0;
 	int i;
+	int tamanho;
+
+	for(tamanho = 0; m[tamanho]; tamanho++);
+
 	for (i = 0; m[i]; i++) {
 		char c = m[i];
-		if (c == ' ') {
+		//final de palavra ou final de frase
+		if (c == ' ' || i == tamanho - 1) {
 			if (currentCount == 1) {
 				//letras sozinhas devem ser 'a', 'e' ou 'o'
 				switch (m[i - 1]) {
@@ -128,6 +132,20 @@ int isValid(char *m) {
 				case 'e':
 					break;
 				default:
+					return 0;
+				}
+			} else {
+				//última letra não pode ser uma dessas
+				switch (c == ' ' ? m[i - 1] : c) {
+				case 'h':
+				case 'c':
+				case 'n':
+				case 'p':
+				case 't':
+				case 'q':
+				case 'v':
+				case 'd':
+				case 'f':
 					return 0;
 				}
 			}
@@ -150,6 +168,13 @@ int isValid(char *m) {
 				countVowels = 0;
 			}
 
+			//m antes de p e b
+			if (c == 'p' || c == 'b') {
+				if (m[i - 1] == 'n') {
+					return 0;
+				}
+			}
+
 			//maximo número de consoantes e vogais
 			if (countVowels > 3 || countConsonant > 4) {
 				return 0;
@@ -166,7 +191,7 @@ void decifrar(char * mensagem, char * resultado) {
 	char order[26]; //vetor para a sequencia de frequencia
 	int freq[26]; //vetor para a quantidade de cada letra
 
-	char *temp = malloc((strlen(mensagem) + 1)*sizeof(char));
+	char *temp = malloc((strlen(mensagem) + 1) * sizeof(char));
 
 	//testar todas as possibilidades
 	for (i = 0; i < 26; i++) {
@@ -192,7 +217,4 @@ void decifrar(char * mensagem, char * resultado) {
 
 	//usando o menor desvio, traduza a mensagem
 	transform(mensagem, resultado, minI);
-
-	printf("Probable shift: %d, dev: %d\nString: ", minI, minDev);
-	puts(resultado);
 }
